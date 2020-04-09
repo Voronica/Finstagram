@@ -1,0 +1,48 @@
+<html>
+<head>
+</head>
+<body>
+
+<form action="/post" method="POST">
+	<h1>Welcome {{username}}</h1>
+
+</form>
+
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+
+
+
+Here are who you are following:
+<table>
+ <tr>
+  <th>userName</th>
+  <th>firstName</th>
+  <th>lastName</th>
+  <th>status</th>
+ </tr>
+
+{% for following in followings %}
+ <tr>
+  <td>{{following.username}}</td>
+  <td>{{following.firstName}}</td>
+  <td>{{following.lastName}}</td>
+  <td>{{following.followStatus}}</td>
+
+ </tr>
+{% endfor %}
+</table>
+
+
+
+
+</body>
+
+
+</html>
+

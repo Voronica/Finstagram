@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <title>Image Upload</title>
+    </head>
+    <body>
+        <div class="row">
+            <div class="col">
+                <h1>Upload an Image!</h1>
+                <hr>
+                <form action="/post" method="POST" enctype="multipart/form-data">
+                    <input type ="file" name ="file" accept="image/*"  autocomplete="off" required>
+                    <input type="checkbox" name="public" value="1" checked>Visible to all followers?<br/>
+                    <br/>
+                    <input type="submit" value = Post />
+                </form>
+            </div>
+        </div>
+        <a href="/">Go back</a>
+    </body>
+</html>

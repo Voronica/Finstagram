@@ -1,0 +1,94 @@
+<html>
+<head>
+</head>
+<body>
+
+
+<h1>Hello, {{username}}</h1>
+<br>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Details of posts:
+<table>
+	<tr>
+		<th>photoID</th>
+		<th>firstName</th>
+		<th>lastName</th>
+		<th>postDate</th>
+		
+	</tr>
+
+{% for post in posts %}
+	<tr>
+		<td>{{post.pID}}</td>
+		<td>{{post.firstName}}</td>
+		<td>{{post.lastName}}</td>
+		<td>{{post.postingDate}}</td>
+		
+
+	</tr>
+{% endfor %}
+</table>
+
+<br>
+See who are tagged:
+<table>
+	<tr>
+		<th>username</th>
+		<th>firstName</th>
+		<th>lastName</th>
+
+		
+	</tr>
+{% for person in tagged %}
+	<tr>
+		<td>{{person.username}}</td>
+		<td>{{person.firstName}}</td>
+		<td>{{person.lastName}}</td>
+
+	
+
+	</tr>
+
+
+{% endfor %}
+
+</table>
+<br>
+See who have reacted:
+<table>
+	<tr>
+		<th>username</th>
+		<th>emoji</th>
+		<th>comment</th>
+
+		
+	</tr>
+{% for reaction in reactions %}
+	<tr>
+		<td>{{reaction.username}}</td>
+		<td>{{reaction.emoji}}</td>
+		<td>{{reaction.comment}}</td>
+
+	
+
+	</tr>
+
+
+{% endfor %}
+
+</table>
+
+
+
+<br>
+
+</body>
+
+
+</html>
+

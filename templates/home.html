@@ -1,0 +1,59 @@
+<html>
+<head>
+</head>
+<body>
+
+<form action="/post" method="POST">
+	<h1>Welcome {{username}}</h1>
+
+	<a href="/upload_image">Upload Image</a>
+</form>
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Here are your posts:
+
+<table>
+	<tr>
+		<th>photoID</th>
+		<th>postDate</th>
+		<th>details</th>
+	</tr>
+
+{% for line in posts %}
+	<tr>
+		<td>{{line.pID}}</td>
+		<td>{{line.postingDate}}</td>
+		<td> <form action="/show_details" method="POST"> <button type='submit' name='details' value={{line.pID}}>show details</button> </form></td>
+
+
+
+	</tr>
+{% endfor %}
+</table>
+
+<br>
+
+
+<form action="/type_follow" method="POST">
+	<input type="text" name = "follow" placeholder="type the name you want to follow" required/>
+	<button type='submit' name='search'>follow</button>
+	
+</form>
+
+
+
+
+
+
+<br>
+<a href="/logout">Logout</a>
+
+</body>
+
+
+</html>
+
