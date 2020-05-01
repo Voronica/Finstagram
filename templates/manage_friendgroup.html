@@ -1,0 +1,26 @@
+<html>
+<head>
+</head>
+<body>
+
+<form action="/manage_friendgroup" method="POST">
+ <h1>Welcome {{username}}! Manage your friend group!</h1>
+ <br>
+ Type in the name of friend group:
+ <br>
+ <input type="text" name = "name" placeholder="create the name of a new friend group" request>
+ <br>
+ Type in description of friend group (Optional):
+ <br>
+ <input type="text" name = "description" placeholder="create the name of a new friend group (OPTIONAL)">
+ <button type='submit' value = 'createGroup'>create</button>
+<br>
+
+
+{% if error %}
+ <p class="error"><strong>Error:</strong> {{error}}</p>
+{% endif %}
+</body>
+
+
+</html>

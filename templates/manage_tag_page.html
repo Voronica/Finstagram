@@ -1,0 +1,45 @@
+<html>
+<head>
+</head>
+<body>
+<h1>Welcome {{username}}! Manage your tags</h1>
+<br>
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+Here are all your tag request:
+
+<br>
+
+<table>
+	<tr>
+
+		<th>PhotoID</th>
+		<th>Accept</th>
+		<th>Deny</th>
+		
+	</tr>
+
+{% for user in allRequests %}
+	<tr>
+		<td>{{user.pID}}</td>
+		<td> <form action="/process_tag" method="POST"> <button type='submit' name='process' value="accept {{user.pID}}">accept</button> </form></td>
+		<td> <form action="/process_tag" method="POST"> <button type='submit' name='process' value="deny {{user.pID}}">deny</button> </form></td>
+
+	</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<a href="/home">Home Page</a>
+
+</body>
+
+
+</html>
+

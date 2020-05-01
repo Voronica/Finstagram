@@ -1,0 +1,52 @@
+<html>
+<head>
+</head>
+<body>
+<form action="/process_follow" method="POST">
+	<h1>Welcome {{username}}! Manage your follow page!</h1>
+	<input type="text" name = "follow" placeholder="type the name you want to follow">
+	<button type='submit' name='search' value = 'request'>follow</button>
+<br>
+
+
+
+<style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+
+<br>
+
+Here are all your follow request:
+
+<br>
+
+<table>
+	<tr>
+		<th>UserID</th>
+		<th>Accept</th>
+		<th>Deny</th>
+		
+	</tr>
+
+{% for user in allRequests %}
+	<tr>
+		<td>{{user.follower}}</td>
+		<td> <form action="/process_follow" method="POST"> <button type='submit' name='manage' value="accept {{user.follower}}">accept</button> </form></td>
+		<td> <form action="/process_follow" method="POST"> <button type='submit' name='manage' value="deny {{user.follower}}">deny</button> </form></td>
+
+	</tr>
+{% endfor %}
+</table>
+
+{% if error %}
+	<p class="error"><strong>Error:</strong> {{error}}</p>
+{% endif %}
+
+<a href="/home">Home Page</a>
+
+</body>
+
+
+</html>

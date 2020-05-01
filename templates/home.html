@@ -21,6 +21,7 @@ Here are your posts:
 		<th>photoID</th>
 		<th>postDate</th>
 		<th>details</th>
+		<th>request tags</th>
 	</tr>
 
 {% for line in posts %}
@@ -28,6 +29,9 @@ Here are your posts:
 		<td>{{line.pID}}</td>
 		<td>{{line.postingDate}}</td>
 		<td> <form action="/show_details" method="POST"> <button type='submit' name='details' value={{line.pID}}>show details</button> </form></td>
+		<td><form action="/manage_tags" method="POST">
+	<input type="text" name = "tagged" placeholder="type the name you want to tag">
+	<button type='submit' name='search' value = '{{line.pID}}'>request</button></td>
 
 
 
@@ -38,14 +42,11 @@ Here are your posts:
 <br>
 
 
-<form action="/type_follow" method="POST">
-	<input type="text" name = "follow" placeholder="type the name you want to follow" required/>
-	<button type='submit' name='search'>follow</button>
-	
-</form>
-
-
-
+<a href="/manage_follow">Mange Follow</a>
+<br>
+<a href="/create_friendgroup">Mange FriendGroup</a>
+<br>
+<a href="/manage_tag_page">Mange Tag</a>
 
 
 

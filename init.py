@@ -92,16 +92,12 @@ def registerAuth():
 def home():
     user = session['username']
     cursor = conn.cursor();
-    #query on testing
-    query = "SELECT pID, filePath, postingDate FROM Photo WHERE poster= %s ORDER BY postingdate DESC"
-    
-    #later on will use query:
-    #query = "(SELECT pID, filePath, postingDate FROM photo JOIN follow ON photo.poster=follow.followee" \
-            #"WHERE allFollowers=1 AND followStatus=1 AND follower= %s)" \
-            #"UNION " \
-            #"(SELECT pID, filePath, postingDate FROM sharedWith NATURAL JOIN belongTo NATURAL JOIN photo WHERE)" \
-            #"username = %s) ORDER BY postingDate DESC"
-    cursor.execute(query, (user))
+
+    query = "(SELECT pID, filePath, postingDate FROM photo WHERE poster = %s)\
+             UNION\
+             (SELECT pID, filePath, postingDate FROM photo JOIN follow ON photo.poster = follow.followee WHERE follow.follower = %s AND follow.followStatus = %s AND photo.allFollowers = %s)\
+             ORDER BY postingDate DESC"
+    cursor.execute(query, (user, user, 1, 1))
     data = cursor.fetchall()
     cursor.close()
     return render_template('home.html', username=user, posts=data)
@@ -158,32 +154,141 @@ def show_details():
     cursor.close()
     return render_template("show_details.html", username=user, posts=poster, tagged=tag, reactions=reaction)
 
-#still working on type_follow
-@app.route('/type_follow', methods=['GET', 'POST'])
-def type_follow():
+
+
+@app.route('/manage_follow', methods=['GET', 'POST'])
+def manage_follow():
     user = session['username']
-    follow = request.form['follow']
     cursor = conn.cursor()
-    query = "INSERT INTO follow (follower, followee, followStatus) VALUES (%s, %s, 0)"
-    cursor.execute(query, (user, follow))
+    # find all follow requests
+    query = "SELECT follower FROM follow WHERE followee = %s AND followStatus = 0"
+    cursor.execute(query, (user))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template("manage_follow.html", username = user, allRequests = data)
+
+@app.route('/process_follow', methods=['GET', 'POST'])
+def process_follow():
+    user = session['username']
+    cursor = conn.cursor()
+    if (request.form.get('search')):
+        follow = request.form['follow']
+        if (follow != ''):
+            query = "INSERT INTO follow (follower, followee, followStatus) VALUES (%s, %s, 0)"
+            cursor.execute(query, (user, follow))
+            conn.commit()
+            cursor.close()
+            return redirect(url_for('manage_follow'))
+        error = 'Search for a valid user'
+        return render_template('manage_follow.html', error = error)
+        
+    else:  
+        temp = request.form['manage'].split(' ', 1)
+        action = temp[0]
+        follower = temp[1]
+        if action == 'accept':
+            query = 'UPDATE Follow SET followStatus=1 WHERE followee = %s AND follower = %s'
+        else:
+            query = 'DELETE FROM Follow WHERE followee = %s AND follower = %s'
+        cursor.execute(query, (user, follower))
+        conn.commit()
+        cursor.close()
+        return redirect(url_for('manage_follow'))
+    
+@app.route('/create_friendgroup', methods=['GET', 'POST'])
+def create_friendgroup():
+    return render_template('manage_friendgroup.html')
+
+
+@app.route('/manage_friendgroup', methods=['GET', 'POST'])
+def manage_friendgroup():
+    user = session['username']
+    cursor = conn.cursor()
+    groupName = request.form['name']
+    groupDescription = request.form['description']
+    
+    #find the user's friendgroup
+    query = "SELECT groupName FROM friendGroup WHERE groupName = %s and groupCreator = %s"
+    cursor.execute(query, (groupName, user))
+    data = cursor.fetchall()
+    #check if groupname already exist
+
+    if(data):
+        error = "Friend group name already exists"
+        return render_template('manage_friendgroup.html', error = error)
+    else:
+        query = "INSERT INTO friendGroup (groupName, groupCreator, description) VALUES (%s, %s, %s)"
+        cursor.execute(query, (groupName, user, groupDescription))
+        conn.commit()
+        cursor.close()
+        message = 'manage friendgroup succeed'
+        return render_template('message.html', username = user, message = message)
+    
+@app.route('/manage_tags', methods=['GET', 'POST'])
+def manage_tags():
+    user = session['username']
+    cursor = conn.cursor()
+    photo_ID = request.form['search']
+    tagged = request.form['tagged']
+    if (tagged == user):
+        query = "INSERT INTO tag (pID, username, tagStatus) VALUES (%s, %s, %s)"
+        cursor.execute(query, (photo_ID, tagged, 1))
+        conn.commit()
+        cursor.close()
+        message = 'manage tag succeed'
+    else:
+        #check whether tagged can see this photo
+        query = "SELECT * FROM photo JOIN follow ON photo.poster = follow.followee\
+                 WHERE photo.poster = %s AND follow.follower = %s AND follow.followStatus = %s"
+        cursor.execute(query, (user, tagged, 1))
+        data = cursor.fetchall()
+        #check if data empty
+        if(data):
+            query = "INSERT INTO tag (pID, username, tagStatus) VALUES (%s, %s, %s)"
+            cursor.execute(query, (photo_ID, tagged, 0))
+            conn.commit()
+            cursor.close()
+            message = 'manage tag succeed'
+        else:
+            message = 'he/she cannot process this tag'
+    return render_template('message.html', username = user, message = message)
+
+@app.route('/manage_tag_page', methods=['GET', 'POST'])
+def manage_tag_page():
+    user = session['username']
+    cursor = conn.cursor()
+    query = "SELECT * FROM tag WHERE username = %s AND tagStatus = %s"
+    cursor.execute(query, (user ,0))
+    data = cursor.fetchall()
+    
+    return render_template('manage_tag_page.html', username = user, allRequests = data)
+
+@app.route('/process_tag', methods=['GET', 'POST'])
+def process_tag():
+    user = session['username']
+    cursor = conn.cursor()
+    temp = request.form['process'].split(' ', 1)
+    action = temp[0]
+    photo_ID = temp[1]
+
+    if(action == 'accept'):
+        query = "UPDATE tag SET tagStatus=1 WHERE pID = %s AND username = %s"
+        
+    elif(action == 'deny'):
+        query = "DELETE FROM tag WHERE pID = %s AND username = %s"
+    
+    cursor.execute(query, (photo_ID ,user))
     conn.commit()
     cursor.close()
-
-    return render_template('home.html', username=user)
-
-#still working on show_following
-@app.route('/show_following', methods=['GET', 'POST'])
-def show_following():
-    user = session['username']
+    return redirect(url_for('manage_tag_page'))
     
-    cursor = conn.cursor()
-    query = "SELECT username, firstName, lastName , followStatus FROM follow JOIN person ON follow.followee=person.username WHERE follow.follower = %s"
-    cursor.execute(query, (user))
-    following = cursor.fetchall()
-    cursor.close()
-
-    return render_template("show_following.html", username=user, followings = following)
     
+
+@app.route('/logout')
+def logout():
+    session.pop('username')
+    return redirect('/')
+
 
 app.secret_key = 'some key that you will never guess'
 

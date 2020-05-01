@@ -9,7 +9,11 @@
                 <hr>
                 <form action="/post" method="POST" enctype="multipart/form-data">
                     <input type ="file" name ="file" accept="image/*"  autocomplete="off" required>
-                    <input type="checkbox" name="public" value="1" checked>Visible to all followers?<br/>
+                    <br>
+                    Visible to all followers?
+                    <br>
+                    <input type="checkbox" name="public" value="1" checked>Yes<br/>
+                    <input type="checkbox" name="public" value="0" checked>No<br/>
                     <br/>
                     <input type="submit" value = Post />
                 </form>
