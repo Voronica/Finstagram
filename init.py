@@ -2,9 +2,12 @@ from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors
 import os
 import time
-
+import hashlib
+import datetime
 
 app = Flask(__name__)
+SALT = 'cs3083'
+app.config["IMAGES_DIR"] = "static"
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
@@ -36,13 +39,14 @@ def register():
 def loginAuth():
     #grabs information from the forms
     username = request.form['username']
-    password = request.form['password']
+    password = request.form['password']+SALT
+    hashed = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
     #cursor used to send queries
     cursor = conn.cursor()
     #executes query
     query = 'SELECT * FROM person WHERE username = %s and password = %s'
-    cursor.execute(query, (username, password))
+    cursor.execute(query, (username, hashed))
     #stores the results in a variable
     data = cursor.fetchone()
     #use fetchall() if you are expecting more than 1 data row
@@ -63,9 +67,11 @@ def loginAuth():
 def registerAuth():
     #grabs information from the forms
     username = request.form['username']
-    password = request.form['password']
+    password = request.form['password']+SALT
     lastName = request.form['lastName']
     firstName = request.form['firstName']
+    email = request.form['email']
+    hashed = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
     #cursor used to send queries
     cursor = conn.cursor()
@@ -82,7 +88,7 @@ def registerAuth():
         return render_template('register.html', error = error)
     else:
         ins = 'INSERT INTO person VALUES(%s, %s, %s, %s, %s)'
-        cursor.execute(ins, (username, password, firstName, lastName, ''))
+        cursor.execute(ins, (username, hashed, firstName, lastName, email))
         conn.commit()
         cursor.close()
         return render_template('index.html')
@@ -93,10 +99,15 @@ def home():
     user = session['username']
     cursor = conn.cursor();
 
-    query = "(SELECT pID, filePath, postingDate FROM photo WHERE poster = %s)\
-             UNION\
-             (SELECT pID, filePath, postingDate FROM photo JOIN follow ON photo.poster = follow.followee WHERE follow.follower = %s AND follow.followStatus = %s AND photo.allFollowers = %s)\
-             ORDER BY postingDate DESC"
+    query = '''
+    (SELECT pID, filePath, postingDate
+    FROM SharedWith NATURAL JOIN BelongTo NATURAL JOIN Photo
+    WHERE username= %s)
+    UNION
+    (SELECT pID, filePath, postingDate
+    FROM photo JOIN follow ON photo.poster = follow.followee
+    WHERE follow.follower = %s AND follow.followStatus = %s AND photo.allFollowers = %s)
+    ORDER BY postingDate DESC'''
     cursor.execute(query, (user, user, 1, 1))
     data = cursor.fetchall()
     cursor.close()
@@ -105,30 +116,57 @@ def home():
 
 @app.route("/upload_image", methods=["GET"])
 def upload_image():
-    return render_template("upload.html")
+    user = session['username']
+    cursor = conn.cursor()
+    query = 'SELECT groupName, groupCreator FROM BelongTo WHERE username=%s'
+    cursor.execute(query, (user))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template("upload.html", groups=data)
 
-app.config["IMAGES_DIR"] = "/Users/voronica/Desktop/Finstagram/static"
 
 @app.route('/post', methods=['GET', 'POST'])
 def post():
     username = session['username']
     cursor = conn.cursor()
     image_file = request.files['file']
-    file_name = image_file.filename
-    file_path = os.path.join(app.config["IMAGES_DIR"], file_name)
+    caption = request.form['caption']
+    #file_name = image_file.filename
+    #file_path = os.path.join(app.config["IMAGES_DIR"], file_name)
     all_followers = request.form['public']
+    posting_date = time.strftime('%Y-%m-%d %H:%M:%S')
+
+    # getting pID, filePath
+    query = 'INSERT INTO Photo VALUES ()'
+    cursor.execute(query)
+    query = 'SELECT LAST_INSERT_ID() FROM Photo'
+    cursor.execute(query)
+    pID = cursor.fetchone()['LAST_INSERT_ID()']
+    filePath = os.path.join(app.config['UPLOAD_FOLDER'], str(pID))
+    # storing photo to local directory
     image_file.save(file_path)
-    #add info to database
-    query = "INSERT INTO photo (poster,postingDate, filePath, allFollowers) VALUES (%s, %s, %s, %s)"
-    cursor.execute(query, (username, time.strftime('%Y-%m-%d %H:%M:%S'), file_path, all_followers))
+
+    # add info to database
+    #query = "INSERT INTO photo (poster,postingDate, filePath, allFollowers) VALUES (%s, %s, %s, %s)"
+    #cursor.execute(query, (username, time.strftime('%Y-%m-%d %H:%M:%S'), file_path, all_followers))
+    query = 'UPDATE Photo SET postingDate=%s, filePath=%s, allFollowers=%s, caption=%s, poster=%s WHERE pID=%s'
+    cursor.execute(query,(posting_date, filePath, allFollowers, caption, user, pID))
+
+    # updating SharedWith
+    friendGroups = request.form.getlist('friendGroups')
+    for group in friendGroups:
+        temp = group.split('by')
+        query = 'INSERT INTO SharedWith VALUES(%s, %s, %s)'
+        cursor.execute(query, (pID, temp[0], temp[1]))
     conn.commit()
 
-    query = "SELECT pID, filePath, postingDate FROM Photo WHERE poster= %s ORDER BY postingdate DESC"
-    cursor.execute(query, (username))
-    data = cursor.fetchall()
-    cursor.close() 
-    
-    return render_template('home.html', username=username, posts=data)
+    #query = "SELECT pID, filePath, postingDate FROM Photo WHERE poster= %s ORDER BY postingdate DESC"
+    #cursor.execute(query, (username))
+    #data = cursor.fetchall()
+    #cursor.close()
+
+    #return render_template('home.html', username=username, posts=data)
+    return redirect(url_for('home'))
 
 @app.route('/show_details', methods=['GET', 'POST'])
 def show_details():
@@ -174,15 +212,20 @@ def process_follow():
     if (request.form.get('search')):
         follow = request.form['follow']
         if (follow != ''):
-            query = "INSERT INTO follow (follower, followee, followStatus) VALUES (%s, %s, 0)"
-            cursor.execute(query, (user, follow))
-            conn.commit()
-            cursor.close()
-            return redirect(url_for('manage_follow'))
-        error = 'Search for a valid user'
+            # checking username actually exists
+            query = 'SELECT * FROM Person WHERE username = %s'
+            cursor.execute(query, (followee))
+            data = cursor.fetchone()
+            if (data):
+                query = "INSERT INTO follow (follower, followee, followStatus) VALUES (%s, %s, 0)"
+                cursor.execute(query, (user, follow))
+                conn.commit()
+                cursor.close()
+                return redirect(url_for('manage_follow'))
+        error = 'Please search for a valid user.'
         return render_template('manage_follow.html', error = error)
-        
-    else:  
+
+    else:
         temp = request.form['manage'].split(' ', 1)
         action = temp[0]
         follower = temp[1]
@@ -194,7 +237,7 @@ def process_follow():
         conn.commit()
         cursor.close()
         return redirect(url_for('manage_follow'))
-    
+
 @app.route('/create_friendgroup', methods=['GET', 'POST'])
 def create_friendgroup():
     return render_template('manage_friendgroup.html')
@@ -206,24 +249,27 @@ def manage_friendgroup():
     cursor = conn.cursor()
     groupName = request.form['name']
     groupDescription = request.form['description']
-    
+
     #find the user's friendgroup
     query = "SELECT groupName FROM friendGroup WHERE groupName = %s and groupCreator = %s"
     cursor.execute(query, (groupName, user))
     data = cursor.fetchall()
     #check if groupname already exist
-
     if(data):
-        error = "Friend group name already exists"
+        error = "Friend group with the same name already exists"
         return render_template('manage_friendgroup.html', error = error)
     else:
+        #create grop
         query = "INSERT INTO friendGroup (groupName, groupCreator, description) VALUES (%s, %s, %s)"
         cursor.execute(query, (groupName, user, groupDescription))
+        #add group creator to the group
+        query = 'INSERT INTO BelongTo(username, groupName, groupCreator) VALUES (%s, %s, %s)'
+        cursor.execute(query, (user, groupName, user))
         conn.commit()
         cursor.close()
         message = 'manage friendgroup succeed'
         return render_template('message.html', username = user, message = message)
-    
+
 @app.route('/manage_tags', methods=['GET', 'POST'])
 def manage_tags():
     user = session['username']
@@ -260,7 +306,7 @@ def manage_tag_page():
     query = "SELECT * FROM tag WHERE username = %s AND tagStatus = %s"
     cursor.execute(query, (user ,0))
     data = cursor.fetchall()
-    
+
     return render_template('manage_tag_page.html', username = user, allRequests = data)
 
 @app.route('/process_tag', methods=['GET', 'POST'])
@@ -273,16 +319,16 @@ def process_tag():
 
     if(action == 'accept'):
         query = "UPDATE tag SET tagStatus=1 WHERE pID = %s AND username = %s"
-        
+
     elif(action == 'deny'):
         query = "DELETE FROM tag WHERE pID = %s AND username = %s"
-    
+
     cursor.execute(query, (photo_ID ,user))
     conn.commit()
     cursor.close()
     return redirect(url_for('manage_tag_page'))
-    
-    
+
+
 
 @app.route('/logout')
 def logout():
@@ -293,5 +339,4 @@ def logout():
 app.secret_key = 'some key that you will never guess'
 
 if __name__ == '__main__':
-    app.run('127.0.0.1', 5000, debug = True)
-
+    app.run('127.0.0.1', 6543, debug = True)

@@ -6,19 +6,28 @@
         <div class="row">
             <div class="col">
                 <h1>Upload an Image!</h1>
-                <hr>
                 <form action="/post" method="POST" enctype="multipart/form-data">
-                    <input type ="file" name ="file" accept="image/*"  autocomplete="off" required>
+                    Choose a file to upload: <input type ="file" name ="file" accept="image/*"  autocomplete="off" required><br>
                     <br>
-                    Visible to all followers?
+                    Add caption (optional):
+                    <input type='text' name='caption'/><br>
                     <br>
-                    <input type="checkbox" name="public" value="1" checked>Yes<br/>
-                    <input type="checkbox" name="public" value="0" checked>No<br/>
-                    <br/>
+                    Visible to all followers?<br>
+                    <input type="checkbox" name="public" value="1">Yes<br/>
+                    <input type="checkbox" name="public" value="0">No<br/>
+                    <br>
+                    Choose friend groups to share with:<br>
+                    {% for line in groups %}
+                    <input type='checkbox' name='friendGroups' value="{{line.groupName}}by{{line.groupCreator}}">{{line.groupName}} by {{line.groupCreator}}</input>
+                    <br>
+                    {% endfor %}
+                    <br>
                     <input type="submit" value = Post />
                 </form>
             </div>
         </div>
-        <a href="/">Go back</a>
+        <a href="/home">Cancel</a>
+        <br>
+        <a href="/logout">Log out</a>
     </body>
 </html>

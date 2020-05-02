@@ -4,11 +4,10 @@
 <body>
 <form action="/process_follow" method="POST">
 	<h1>Welcome {{username}}! Manage your follow page!</h1>
-	<input type="text" name = "follow" placeholder="type the name you want to follow">
-	<button type='submit' name='search' value = 'request'>follow</button>
+	Who do you want to follow?<br>
+	<input type="text" name = "follow" placeholder="Type the name you want to follow" size='30'>
+	<button type='submit' name='search' value = 'request'>Follow</button>
 <br>
-
-
 
 <style type="text/css">
 	table, th, td{
@@ -27,7 +26,7 @@ Here are all your follow request:
 		<th>UserID</th>
 		<th>Accept</th>
 		<th>Deny</th>
-		
+
 	</tr>
 
 {% for user in allRequests %}
@@ -39,12 +38,17 @@ Here are all your follow request:
 	</tr>
 {% endfor %}
 </table>
+<br>
 
 {% if error %}
 	<p class="error"><strong>Error:</strong> {{error}}</p>
 {% endif %}
 
-<a href="/home">Home Page</a>
+	<a href='/home'>Cancel</a>
+  <br>
+  <a href='/home'>Go back to homepage</a>
+  <br>
+  <a href="/logout">Log out</a>
 
 </body>
 
