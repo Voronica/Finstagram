@@ -1,0 +1,23 @@
+<html>
+<head>
+</head>
+<style>
+	a {
+		padding: 3px;
+	}
+</style>
+<body>
+	{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+	{% if message %}
+		<p>{{message}}</p>
+	{% endif %}
+
+	<a href="/create_fg_page">Create a new friend group</a><br>
+	<a href="/add_to_fg_page">Add user to an existing friend group</a><br>
+	<br>
+	<a href="/home">Cancel</a><br>
+	<a href="/logout">Log out</a>
+</body>
+</html>

@@ -178,7 +178,6 @@ def show_details():
     query = "SELECT pID, firstName, lastName, postingDate FROM photo JOIN person ON photo.poster=person.username WHERE photo.pID= %s"
     cursor.execute(query,(photo_ID))
     poster = cursor.fetchall()
-    print(poster)
 
     #get tagged
     query = "SELECT username, firstName, lastName FROM tag NATURAL JOIN Person WHERE tag.pID = %s AND tag.tagStatus=1"
@@ -239,13 +238,16 @@ def process_follow():
         cursor.close()
         return redirect(url_for('manage_follow'))
 
+@app.route('/manage_friendgroup_page')
+def manage_friendgroup_page():
+    return render_template('manage_friendgroup_page.html')
+
+@app.route('/create_fg_page')
+def create_fg_page():
+    return render_template('create_fg_page.html')
+
 @app.route('/create_friendgroup', methods=['GET', 'POST'])
 def create_friendgroup():
-    return render_template('manage_friendgroup.html')
-
-
-@app.route('/manage_friendgroup', methods=['GET', 'POST'])
-def manage_friendgroup():
     user = session['username']
     cursor = conn.cursor()
     groupName = request.form['name']
@@ -257,8 +259,8 @@ def manage_friendgroup():
     data = cursor.fetchall()
     #check if groupname already exist
     if(data):
-        error = "Friend group with the same name already exists"
-        return render_template('manage_friendgroup.html', error = error)
+        error = "Friend group with the same name already exists."
+        return render_template('manage_friendgroup_page.html', error = error)
     else:
         #create grop
         query = "INSERT INTO friendGroup (groupName, groupCreator, description) VALUES (%s, %s, %s)"
@@ -268,8 +270,47 @@ def manage_friendgroup():
         cursor.execute(query, (user, groupName, user))
         conn.commit()
         cursor.close()
-        message = 'manage friendgroup succeed'
-        return render_template('message.html', username = user, message = message)
+        message = 'Success!'
+        return render_template('manage_friendgroup_page.html', message = message)
+
+@app.route('/add_to_fg_page')
+def add_to_fg_page():
+    user = session['username']
+    cursor = conn.cursor()
+    query = 'SELECT groupName, description FROM FriendGroup WHERE groupCreator = %s'
+    cursor.execute(query, (user))
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('add_to_fg_page.html', fgroups=data)
+
+@app.route('/add_to_friendgroup', methods=['GET', 'POST'])
+def add_to_friendgroup():
+    user = session['username']
+    group = request.form['fgroup']
+    member = request.form['newMember']
+    cursor = conn.cursor()
+    # check if username actually exists
+    query = 'SELECT * FROM Person WHERE username = %s'
+    cursor.execute(query, (member))
+    data = cursor.fetchall()
+    if (data):
+        # check if username already belongs to group
+        query = 'SELECT * FROM BelongTo WHERE (groupName, groupCreator, username)=(%s, %s, %s)'
+        cursor.execute(query, (group, user, member))
+        data = cursor.fetchall()
+        if (data):
+            error = 'This person is already in selected friend group.'
+            return render_template('manage_friendgroup_page.html', error=error)
+        else:
+            query = 'INSERT INTO BelongTo(groupName, groupCreator, username) VALUES (%s, %s, %s)'
+            cursor.execute(query, (group, user, member))
+            conn.commit()
+            cursor.close()
+            message = 'Success!'
+            return render_template('manage_friendgroup_page.html', message = message)
+    else:
+        error = 'Please enter a valid username.'
+        return render_template('manage_friendgroup_page.html', error=error)
 
 @app.route('/manage_tags', methods=['GET', 'POST'])
 def manage_tags():
@@ -378,4 +419,4 @@ def logout():
 app.secret_key = 'some key that you will never guess'
 
 if __name__ == '__main__':
-    app.run('127.0.0.1', 6543, debug = True)
+    app.run('127.0.0.1', 5000, debug = True)

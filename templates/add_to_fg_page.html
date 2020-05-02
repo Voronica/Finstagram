@@ -1,0 +1,35 @@
+<html>
+<head>
+</head>
+<style>
+  label {
+    font-weight: bold;
+    padding: 3px;
+  }
+  input {
+    margin: 5px;
+  }
+  button {
+    margin: 3px;
+  }
+  a {
+  	padding: 3px;
+  }
+</style>
+<body>
+  <form action='/add_to_friendgroup' method='POST'>
+    <label>Select a group:</label><br>
+    {% for line in fgroups %}
+    <input type='radio' name='fgroup' value="{{line.groupName}}">{{line.groupName}} (description: {{line.description}})</input><br>
+    {% endfor %}
+    <br>
+    <label>Search by username to add to the group:</label><br>
+    <input type='text' name='newMember' required />
+    <button type='submit' name='submit'>Add</button><br>
+  </form>
+
+  <a href='/manage_friendgroup_page'>Cancel</a><br>
+  <a href='/home'>Go back to homepage</a><br>
+  <a href="/logout">Log out</a>
+</body>
+</html>
