@@ -127,12 +127,10 @@ def upload_image():
 
 @app.route('/post', methods=['GET', 'POST'])
 def post():
-    username = session['username']
+    user = session['username']
     cursor = conn.cursor()
     image_file = request.files['file']
     caption = request.form['caption']
-    #file_name = image_file.filename
-    #file_path = os.path.join(app.config["IMAGES_DIR"], file_name)
     all_followers = request.form['public']
     posting_date = time.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -142,15 +140,13 @@ def post():
     query = 'SELECT LAST_INSERT_ID() FROM Photo'
     cursor.execute(query)
     pID = cursor.fetchone()['LAST_INSERT_ID()']
-    filePath = os.path.join(app.config['UPLOAD_FOLDER'], str(pID))
+    file_path = os.path.join(app.config['IMAGES_DIR'], str(pID))
     # storing photo to local directory
     image_file.save(file_path)
 
     # add info to database
-    #query = "INSERT INTO photo (poster,postingDate, filePath, allFollowers) VALUES (%s, %s, %s, %s)"
-    #cursor.execute(query, (username, time.strftime('%Y-%m-%d %H:%M:%S'), file_path, all_followers))
     query = 'UPDATE Photo SET postingDate=%s, filePath=%s, allFollowers=%s, caption=%s, poster=%s WHERE pID=%s'
-    cursor.execute(query,(posting_date, filePath, allFollowers, caption, user, pID))
+    cursor.execute(query,(posting_date, file_path, all_followers, caption, user, pID))
 
     # updating SharedWith
     friendGroups = request.form.getlist('friendGroups')
@@ -159,13 +155,7 @@ def post():
         query = 'INSERT INTO SharedWith VALUES(%s, %s, %s)'
         cursor.execute(query, (pID, temp[0], temp[1]))
     conn.commit()
-
-    #query = "SELECT pID, filePath, postingDate FROM Photo WHERE poster= %s ORDER BY postingdate DESC"
-    #cursor.execute(query, (username))
-    #data = cursor.fetchall()
-    #cursor.close()
-
-    #return render_template('home.html', username=username, posts=data)
+    cursor.close()
     return redirect(url_for('home'))
 
 @app.route('/show_details', methods=['GET', 'POST'])
@@ -214,7 +204,7 @@ def process_follow():
         if (follow != ''):
             # checking username actually exists
             query = 'SELECT * FROM Person WHERE username = %s'
-            cursor.execute(query, (followee))
+            cursor.execute(query, (follow))
             data = cursor.fetchone()
             if (data):
                 query = "INSERT INTO follow (follower, followee, followStatus) VALUES (%s, %s, 0)"
