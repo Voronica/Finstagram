@@ -2,21 +2,34 @@
     <head>
         <title>Image Upload</title>
     </head>
+    <style>
+      label {
+        font-weight: bold;
+      	padding: 3px;
+      }
+      input {
+      	margin: 5px;
+      }
+      a {
+      	padding: 3px;
+      }
+    </style>
     <body>
         <div class="row">
             <div class="col">
                 <h1>Upload an Image!</h1>
                 <form action="/post" method="POST" enctype="multipart/form-data">
-                    Choose a file to upload: <input type ="file" name ="file" accept="image/*"  autocomplete="off" required><br>
+                    <label>Choose a file to upload:</label>
+                    <input type ="file" name ="file" accept="image/*"  autocomplete="off" required><br>
                     <br>
-                    Add caption (optional):
+                    <label>Add caption (optional):</label>
                     <input type='text' name='caption'/><br>
                     <br>
-                    Visible to all followers?<br>
+                    <label>Visible to all followers?</label><br>
                     <input type="checkbox" name="public" value="1">Yes<br/>
                     <input type="checkbox" name="public" value="0">No<br/>
                     <br>
-                    Choose friend groups to share with:<br>
+                    <label>Choose friend groups to share with:</label><br>
                     {% for line in groups %}
                     <input type='checkbox' name='friendGroups' value="{{line.groupName}}by{{line.groupCreator}}">{{line.groupName}} by {{line.groupCreator}}</input>
                     <br>

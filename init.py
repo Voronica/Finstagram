@@ -174,10 +174,11 @@ def show_details():
     photo_ID = request.form['details']
     cursor = conn.cursor()
 
-    #get posts
-    query = "SELECT pID, firstName, lastName, postingDate FROM photo JOIN person ON photo.poster=person.username WHERE photo.poster= %s AND photo.pID= %s ORDER BY postingdate DESC"
-    cursor.execute(query,(user, photo_ID))
+    #get poster
+    query = "SELECT pID, firstName, lastName, postingDate FROM photo JOIN person ON photo.poster=person.username WHERE photo.pID= %s"
+    cursor.execute(query,(photo_ID))
     poster = cursor.fetchall()
+    print(poster)
 
     #get tagged
     query = "SELECT username, firstName, lastName FROM tag NATURAL JOIN Person WHERE tag.pID = %s AND tag.tagStatus=1"
@@ -328,6 +329,44 @@ def process_tag():
     cursor.close()
     return redirect(url_for('manage_tag_page'))
 
+@app.route('/add_reactions_page', methods=['GET', 'POST'])
+def add_reactions_page():
+    user = session['username']
+    pID = request.form['reactTo']
+    # check if user has already reacted to the same photo
+    query = "SELECT * FROM ReactTo WHERE (username, pID)=(%s, %s)"
+    cursor = conn.cursor()
+    cursor.execute(query, (user, pID))
+    data = cursor.fetchall()
+    if (data):
+        error = "You have alread reacted to this photo. You can go back and click on 'show details' to see your reactions."
+        return render_template('add_reactions_page.html', error=error)
+    else:
+        query = "SELECT pID, filePath, poster FROM Photo WHERE pID = %s"
+        cursor.execute(query, (pID))
+        data = cursor.fetchall()
+        return render_template('add_reactions_page.html', data=data)
+
+@app.route('/add_reactions', methods=['GET', 'POST'])
+def add_reactions():
+    user = session['username']
+    pID = request.form['reactions']
+    comment = request.form['comment']
+    emoji = request.form['emoji']
+    reactionTime = str(datetime.datetime.now())
+
+    cursor = conn.cursor()
+    # change column collation to store emoji
+    query = "ALTER TABLE ReactTo MODIFY emoji VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    cursor.execute(query, ())
+    query = "ALTER TABLE ReactTo MODIFY comment VARCHAR(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    cursor.execute(query, ())
+    # store data into database
+    query = "INSERT INTO ReactTo(username, pID, reactionTime, comment, emoji) VALUES (%s, %s, %s, %s, %s)"
+    cursor.execute(query, (user, pID, reactionTime, comment, emoji))
+    conn.commit()
+    cursor.close()
+    return redirect(url_for('home'))
 
 
 @app.route('/logout')

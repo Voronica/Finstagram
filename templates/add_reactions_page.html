@@ -1,0 +1,50 @@
+<html>
+<head>
+</head>
+<style>
+img {
+  width: 280px;
+  height: auto;
+  padding: 3px;
+}
+label {
+	font-weight: bold;
+	padding: 5px;
+}
+input {
+	margin: 3px;
+}
+button {
+  margin: 3px;
+}
+a {
+	padding: 3px;
+}
+</style>
+<body>
+  {% if data %}
+  {% for line in data %}
+  <form action="/add_reactions" method='POST'>
+    <label>React to photo {{line.pID}} posted by {{line.poster}}:</label><br>
+    <img src={{line.filePath}}><br>
+    <br>
+    <label>Add comment:</label><br>
+    <input type='text' name='comment' size='100'/><br>
+    <label>Add emoji:</label><br>
+    <input type='text' name='emoji' size='30'/><br>
+		<button type='submit' name='reactions' value={{line.pID}}>Submit</button>
+	</form>
+  {% endfor %}
+  {% endif %}
+
+  {% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+	{% endif %}
+
+  <br>
+  <a href="/home">Go back</a>
+  <br>
+  <a href="/logout">Logout</a>
+
+</body>
+</html>

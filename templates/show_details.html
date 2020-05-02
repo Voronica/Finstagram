@@ -1,25 +1,31 @@
 <html>
 <head>
 </head>
-<body>
-
-
-<h1>Hello, {{username}}</h1>
-<br>
-<style type="text/css">
-	table, th, td{
-		border: 1px solid black;
-	}
+<style>
+table, th, td {
+	border: 1px solid black;
+	margin: 3px;
+  padding: 2px;
+  text-align: center;
+}
+label {
+	font-weight: bold;
+	padding: 5px;
+}
+a {
+	padding: 3px;
+}
 </style>
+<body>
+<h1>Hello, {{username}}</h1>
 
-Details of posts:
+<label>Details of posts:</label>
 <table>
 	<tr>
-		<th>photoID</th>
-		<th>firstName</th>
-		<th>lastName</th>
-		<th>postDate</th>
-		
+		<th>Photo ID</th>
+		<th>First Name</th>
+		<th>Last Name</th>
+		<th>Post Date</th>
 	</tr>
 
 {% for post in posts %}
@@ -28,60 +34,48 @@ Details of posts:
 		<td>{{post.firstName}}</td>
 		<td>{{post.lastName}}</td>
 		<td>{{post.postingDate}}</td>
-		
-
 	</tr>
 {% endfor %}
 </table>
-
 <br>
-See who are tagged:
+<label>See who are tagged:</label>
 <table>
 	<tr>
-		<th>username</th>
-		<th>firstName</th>
-		<th>lastName</th>
-
-		
+		<th>Username</th>
+		<th>First Name</th>
+		<th>Last Name</th>
 	</tr>
+
 {% for person in tagged %}
 	<tr>
 		<td>{{person.username}}</td>
 		<td>{{person.firstName}}</td>
 		<td>{{person.lastName}}</td>
-
-	
-
 	</tr>
-
-
 {% endfor %}
-
 </table>
 <br>
-See who have reacted:
+<label>See who have reacted:</label>
 <table>
 	<tr>
-		<th>username</th>
-		<th>emoji</th>
-		<th>comment</th>
-
-		
+		<th>Username</th>
+		<th>Emoji</th>
+		<th>Comment</th>
 	</tr>
+
 {% for reaction in reactions %}
 	<tr>
 		<td>{{reaction.username}}</td>
 		<td>{{reaction.emoji}}</td>
 		<td>{{reaction.comment}}</td>
-
-	
-
 	</tr>
-
-
 {% endfor %}
-
 </table>
+
+<br>
+<a href='/home'>Go back</a>
+<br>
+<a href="/logout">Log out</a>
 
 
 
@@ -91,4 +85,3 @@ See who have reacted:
 
 
 </html>
-
