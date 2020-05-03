@@ -31,6 +31,19 @@ a {
 	}
 </style>
 
+	<h2 style="font-size: 15px">Search By Poster </h2>
+	<form method="POST" action="/search_by_poster">
+		<input type="search" name="keyword", required="required"><br>
+		<input type="submit" value="search">
+	</form>
+<h2 style="font-size: 15px">Search By Tag </h2>
+	<form method="POST" action="/search_by_tag">
+		<input type="search" name="keyword", required="required"><br>
+		<input type="submit" value="search">
+	</form>
+
+
+
 <h3>Here are your posts:</h3>
 
 <table>
@@ -61,6 +74,8 @@ a {
 {% endfor %}
 </table>
 
+
+
 <br>
 <a href="/manage_follow">Manage Follow</a>
 <br>
@@ -69,6 +84,7 @@ a {
 <a href="/manage_tag_page">Manage Tag</a>
 <br>
 <a href="/logout">Logout</a>
+
 
 </body>
 </html>
