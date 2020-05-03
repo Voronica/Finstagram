@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SearchResult</title>
+</head>
+<body>
+    <style type="text/css">
+	table, th, td{
+		border: 1px solid black;
+	}
+</style>
+    <style>
+img {
+  width: 180px;
+  height: auto;
+	padding: 3px;
+}
+th, td {
+  padding: 2px;
+  text-align: center;
+}
+input {
+	margin: 3px;
+}
+a {
+	padding: 3px;
+}
+</style>
+</br>
+<table>
+	<tr>
+		<th>Photo ID</th>
+		<th>Post date</th>
+		<th>Details</th>
+		<th>Request tags</th>
+		<th>Add reactions</th>
+	</tr>
+
+{% for line in posts %}
+	<tr>
+		<td>{{line.pID}}</td>
+		<td>{{line.postingDate}}</td>
+		<td> <form action="/show_details" method="POST">
+			<img src={{line.filePath}}><br>
+			<button type='submit' name='details' value={{line.pID}}>Show more details</button>
+		</form></td>
+		<td><form action="/manage_tags" method="POST">
+			<input type="text" name = "tagged" placeholder="Type the name you want to tag" size='30'><br>
+			<button type='submit' name='search' value = '{{line.pID}}'>Request</button>
+		</form></td>
+		<td><form action="/add_reactions_page" method='POST'>
+			<button type='submit' name='reactTo' value={{line.pID}}>React</button>
+		</form></td>
+	</tr>
+{% endfor %}
+</table>
+
+<br>
+<a href='/home'>Cancel</a>
+<br>
+<a href='/home'>Go back to homepage</a>
+<br>
+<a href="/logout">Log out</a>
+</body>
+<
