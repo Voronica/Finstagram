@@ -399,6 +399,57 @@ def add_reactions():
     cursor.close()
     return redirect(url_for('home'))
 
+  # search posts by a certain poster's name
+@app.route('/search_by_poster', methods=['GET', 'POST'])
+def search_by_poster():
+    user = session['username']
+    cursor = conn.cursor()
+    if request.method=='POST':
+        keyword=request.form['keyword']
+        # the displayed photo have to be either posted by the person
+        # or it is shared by someone with a group that person in
+        # or it is posted by the person he follows
+        # it's displayed in time descending order
+        sql="SELECT * " \
+            "FROM Photo " \
+            "WHERE poster=%s AND " \
+            "pID IN (SELECT pID FROM Photo JOIN person ON Photo.poster=person.username " \
+            "WHERE (pID IN (SELECT pID FROM belongto NATURAL JOIN sharedwith WHERE username = %s)) " \
+            "OR (poster = %s) " \
+            "OR (poster IN (SELECT followee FROM Follow WHERE follower = %s and followstatus = 1) and allFollowers = 1)) " \
+            "ORDER BY postingDate DESC"
+        cursor.execute(sql, (keyword, user, user, user))
+        data=cursor.fetchall()
+        return render_template('search_result.html', user=user, posts=data)
+    return render_template('home.html')
+
+
+# search posts by a certain tag name
+@app.route('/search_by_tag', methods=['GET', 'POST'])
+def search_by_tag():
+    user = session['username']
+    cursor = conn.cursor()
+    if request.method=='POST':
+        keyword=request.form['keyword']
+        # the displayed photo have to be either posted by the person
+        # or it is shared by someone with a group that person in
+        # or it is posted by the person he follows
+        # in all three cases, the person also needs to be tagged
+        # It's displayed in time descending order
+        sql="SELECT * " \
+            "FROM Photo NATURAL JOIN tag " \
+            "WHERE tagstatus=true AND username=%s AND " \
+            "pID IN (SELECT pID FROM Photo JOIN person ON Photo.poster=person.username " \
+            "WHERE (poster = %s) " \
+            "OR  (poster IN (SELECT followee FROM follow WHERE " \
+            "follower = %s and followstatus = 1) and allFollowers = 1) " \
+            "OR (pID IN (SELECT pID FROM belongto NATURAL JOIN sharedwith WHERE username = %s))) " \
+            "ORDER BY postingDate DESC"
+        cursor.execute(sql, (keyword, user, user, user))
+        data=cursor.fetchall()
+        return render_template('search_result.html', user=user, posts=data)
+    return render_template('home.html')
+
 
 @app.route('/logout')
 def logout():
