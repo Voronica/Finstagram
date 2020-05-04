@@ -104,9 +104,7 @@ def home():
     FROM SharedWith NATURAL JOIN BelongTo NATURAL JOIN Photo
     WHERE username= %s)
     UNION
-    (SELECT pID, filePath, postingDate
-    FROM SharedWith NATURAL JOIN BelongTo NATURAL JOIN Photo
-    WHERE username= %s)
+    (SELECT pID,filePath,postingDate from photo where poster=%s)
     UNION
     (SELECT pID, filePath, postingDate
     FROM photo JOIN follow ON photo.poster = follow.followee
