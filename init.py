@@ -105,10 +105,14 @@ def home():
     WHERE username= %s)
     UNION
     (SELECT pID, filePath, postingDate
+    FROM SharedWith NATURAL JOIN BelongTo NATURAL JOIN Photo
+    WHERE username= %s)
+    UNION
+    (SELECT pID, filePath, postingDate
     FROM photo JOIN follow ON photo.poster = follow.followee
     WHERE follow.follower = %s AND follow.followStatus = %s AND photo.allFollowers = %s)
     ORDER BY postingDate DESC'''
-    cursor.execute(query, (user, user, 1, 1))
+    cursor.execute(query, (user, user, user, 1, 1))
     data = cursor.fetchall()
     cursor.close()
     return render_template('home.html', username=user, posts=data)
